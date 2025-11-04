@@ -222,51 +222,105 @@
       const len = value.length;
 
       switch (type) {
-        case "TINYINT":
-        case "SMALLINT":
-        case "INT":
-        case "BIGINT":
-          const [min, max] = ranges[type];
-          if (isNaN(num)) output = "❌ Nilai bukan angka.";
-          else if (num < min || num > max) output = `❌ Melebihi batas ${type} (${min} s.d ${max}).`;
-          else output = `✅ Nilai valid (${min} s.d ${max}).`;
-          break;
-        case "CHAR":
-          output = len <= ranges.CHAR
-            ? `✅ ${len} karakter (valid untuk CHAR).`
-            : `❌ Maksimal 255 karakter.`;
-          break;
-        case "VARCHAR":
-          output = len <= ranges.VARCHAR
-            ? `✅ Panjang ${len} karakter (valid).`
-            : `❌ Melebihi batas VARCHAR.`;
-          break;
-        case "TEXT":
-          output = len <= ranges.TEXT
-            ? `✅ Teks valid (${len} karakter).`
-            : `❌ Teks terlalu panjang.`;
-          break;
-        case "DATE":
-          output = /^\d{4}-\d{2}-\d{2}$/.test(value)
-            ? "✅ Format tanggal valid (YYYY-MM-DD)."
-            : "❌ Format tanggal salah.";
-          break;
-        case "DATETIME":
-          output = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
-            ? "✅ Format datetime valid."
-            : "❌ Gunakan format YYYY-MM-DD HH:MM:SS.";
-          break;
-        case "BOOLEAN":
-          output = ["true","false","0","1"].includes(value.toLowerCase())
-            ? "✅ Nilai valid untuk BOOLEAN."
-            : "❌ BOOLEAN hanya menerima 0,1,TRUE,FALSE.";
-          break;
-        default:
-          output = "ℹ️ Nilai diterima, tapi validasi spesifik belum ditentukan.";
-      }
+  // 🔢 NUMERIC TYPES
+  case "TINYINT":
+  case "SMALLINT":
+  case "MEDIUMINT":
+  case "INT":
+  case "BIGINT":
+    const [min, max] = ranges[type] || [-Infinity, Infinity];
+    if (isNaN(num)) output = `❌ Nilai <code>${value}</code> bukan angka valid.`;
+    else if (num < min || num > max)
+      output = `❌ Melebihi batas ${type} (${min} s.d ${max}).`;
+    else output = `✅ Nilai valid untuk ${type} (${min} s.d ${max}).`;
+    break;
 
-      resultBox.innerHTML = output;
-      resultBox.className = "mt-4 text-center text-cyan-300 font-semibold text-lg";
+  case "DECIMAL":
+  case "FLOAT":
+  case "DOUBLE":
+    output = isNaN(num)
+      ? `❌ Nilai <code>${value}</code> bukan angka.`
+      : `✅ Nilai numerik valid untuk ${type}.`;
+    break;
+
+  // 🔤 STRING & TEXT TYPES
+  case "CHAR":
+    output = len <= ranges.CHAR
+      ? `✅ ${len} karakter (valid untuk CHAR).`
+      : `❌ Terlalu panjang (maks 255 karakter).`;
+    break;
+
+  case "VARCHAR":
+    output = len <= ranges.VARCHAR
+      ? `✅ Panjang ${len} karakter (valid untuk VARCHAR).`
+      : `❌ Melebihi batas VARCHAR (maks 65535 karakter).`;
+    break;
+
+  case "TEXT":
+    output = len <= ranges.TEXT
+      ? `✅ Teks valid (${len} karakter).`
+      : `❌ Teks terlalu panjang untuk TEXT.`;
+    break;
+
+  case "BLOB":
+    output = `🗂️ BLOB digunakan untuk data biner (gambar/file), bukan teks langsung.`;
+    break;
+
+  case "ENUM":
+    output = `ℹ️ ENUM hanya menerima nilai dari daftar tetap (contoh: 'A', 'B', 'C').`;
+    break;
+
+  case "SET":
+    output = `ℹ️ SET bisa berisi beberapa nilai dari daftar opsi (contoh: 'A,B').`;
+    break;
+
+  // 🕓 DATE & TIME TYPES
+  case "DATE":
+    output = /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? "✅ Format tanggal valid (YYYY-MM-DD)."
+      : "❌ Format tanggal salah, gunakan YYYY-MM-DD.";
+    break;
+
+  case "DATETIME":
+  case "TIMESTAMP":
+    output = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
+      ? `✅ Format valid untuk ${type} (YYYY-MM-DD HH:MM:SS).`
+      : `❌ Format salah, gunakan YYYY-MM-DD HH:MM:SS.`;
+    break;
+
+  case "TIME":
+    output = /^\d{2}:\d{2}:\d{2}$/.test(value)
+      ? "✅ Format waktu valid (HH:MM:SS)."
+      : "❌ Format waktu salah.";
+    break;
+
+  case "YEAR":
+    output = /^\d{4}$/.test(value)
+      ? `✅ Tahun valid (${value}).`
+      : "❌ Tahun harus 4 digit (contoh: 2025).";
+    break;
+
+  // 🧠 BOOLEAN & BIT
+  case "BOOLEAN":
+    output = ["true", "false", "0", "1"].includes(value.toLowerCase())
+      ? "✅ Nilai valid untuk BOOLEAN."
+      : "❌ BOOLEAN hanya menerima 0, 1, TRUE, atau FALSE.";
+    break;
+
+  case "BIT":
+    output = /^[01]+$/.test(value)
+      ? `✅ Nilai biner valid (${value}).`
+      : "❌ BIT hanya boleh berisi angka 0 dan 1.";
+    break;
+
+  // DEFAULT
+  default:
+    output = "ℹ️ Nilai diterima, tapi validasi spesifik belum ditentukan.";
+}
+
+// hasil output
+resultBox.innerHTML = output;
+resultBox.className = "mt-4 text-center text-cyan-300 font-semibold text-lg";
     });
   </script>
 
