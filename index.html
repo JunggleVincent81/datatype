@@ -6,15 +6,28 @@
   <title>DataType Explorer MySQL | Tegar Bagus Santoso</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body {
-      background: radial-gradient(circle at top right, #0ea5e9, #6366f1, #111827);
-      min-height: 100vh;
-    }
-    .glass {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-    }
+      body {
+    background: radial-gradient(circle at top right, #0ea5e9, #6366f1, #111827);
+    min-height: 100vh;
+  }
+  .glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  pre {
+    overflow-x: auto;
+    white-space: pre;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.3) transparent;
+  }
+  pre::-webkit-scrollbar {
+    height: 6px;
+  }
+  pre::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+  }
   </style>
 </head>
 <body class="text-white font-inter">
@@ -326,3 +339,4 @@ resultBox.className = "mt-4 text-center text-cyan-300 font-semibold text-lg";
 
 </body>
 </html>
+
