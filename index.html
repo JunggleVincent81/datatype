@@ -6,7 +6,7 @@
   <title>DataType Explorer MySQL | Tegar Bagus Santoso</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-      body {
+  body {
     background: radial-gradient(circle at top right, #0ea5e9, #6366f1, #111827);
     min-height: 100vh;
   }
@@ -28,7 +28,8 @@
     background: rgba(255,255,255,0.3);
     border-radius: 10px;
   }
-  </style>
+</style>
+
 </head>
 <body class="text-white font-inter">
 
@@ -242,93 +243,133 @@
   case "INT":
   case "BIGINT":
     const [min, max] = ranges[type] || [-Infinity, Infinity];
-    if (isNaN(num)) output = `❌ Nilai <code>${value}</code> bukan angka valid.`;
-    else if (num < min || num > max)
-      output = `❌ Melebihi batas ${type} (${min} s.d ${max}).`;
-    else output = `✅ Nilai valid untuk ${type} (${min} s.d ${max}).`;
+    if (isNaN(num)) {
+      output = `❌ Nilai <code>${value}</code> bukan angka valid.`;
+    } else if (num < min || num > max) {
+      output = `❌ Nilai melebihi batas ${type} (${min} s.d ${max}).`;
+    } else if (value.includes(".")) {
+      const truncated = Math.trunc(num);
+      output = `⚠️ MySQL akan <b>memotong</b> nilai desimal dan menyimpan sebagai <code>${truncated}</code> (bukan dibulatkan).`;
+    } else {
+      output = `✅ Nilai valid dan akan disimpan utuh sebagai <code>${num}</code>.`;
+    }
     break;
 
   case "DECIMAL":
+    if (isNaN(num)) {
+      output = `❌ Nilai <code>${value}</code> bukan angka valid.`;
+    } else if (!value.includes(".")) {
+      output = `✅ Nilai bulat valid, akan disimpan sebagai <code>${parseFloat(num).toFixed(2)}</code> (otomatis ditambahkan dua digit desimal).`;
+    } else {
+      output = `✅ Nilai desimal valid, disimpan presisi sesuai deklarasi (misal <code>DECIMAL(10,2)</code> → <code>${parseFloat(num).toFixed(2)}</code>).`;
+    }
+    break;
+
   case "FLOAT":
   case "DOUBLE":
-    output = isNaN(num)
-      ? `❌ Nilai <code>${value}</code> bukan angka.`
-      : `✅ Nilai numerik valid untuk ${type}.`;
+    if (isNaN(num)) {
+      output = `❌ Nilai <code>${value}</code> bukan angka valid.`;
+    } else {
+      output = `✅ Nilai valid untuk ${type}. 
+      ⚠️ Namun tipe ini menggunakan presisi floating point, bisa ada perbedaan kecil dalam perhitungan (contoh: 0.1 + 0.2 = 0.3000000000004).`;
+    }
     break;
 
   // 🔤 STRING & TEXT TYPES
   case "CHAR":
-    output = len <= ranges.CHAR
-      ? `✅ ${len} karakter (valid untuk CHAR).`
-      : `❌ Terlalu panjang (maks 255 karakter).`;
+    if (len === 0) {
+      output = "❌ CHAR tidak boleh kosong.";
+    } else if (len > ranges.CHAR) {
+      output = `❌ Terlalu panjang. CHAR maksimal 255 karakter.`;
+    } else {
+      output = `✅ ${len} karakter valid untuk CHAR (panjang tetap, MySQL akan menambah spasi di belakang jika kurang).`;
+    }
     break;
 
   case "VARCHAR":
-    output = len <= ranges.VARCHAR
-      ? `✅ Panjang ${len} karakter (valid untuk VARCHAR).`
-      : `❌ Melebihi batas VARCHAR (maks 65535 karakter).`;
+    if (len === 0) {
+      output = "❌ VARCHAR tidak boleh kosong.";
+    } else if (len > ranges.VARCHAR) {
+      output = `❌ Terlalu panjang. VARCHAR maksimal 65.535 karakter.`;
+    } else {
+      output = `✅ Panjang ${len} karakter valid untuk VARCHAR (panjang fleksibel).`;
+    }
     break;
 
   case "TEXT":
-    output = len <= ranges.TEXT
-      ? `✅ Teks valid (${len} karakter).`
-      : `❌ Teks terlalu panjang untuk TEXT.`;
-    break;
-
-  case "BLOB":
-    output = `🗂️ BLOB digunakan untuk data biner (gambar/file), bukan teks langsung.`;
+    if (len > ranges.TEXT) {
+      output = `❌ Teks terlalu panjang untuk TEXT (maks 65.535 karakter).`;
+    } else {
+      output = `✅ Panjang teks ${len} karakter valid untuk TEXT.`;
+    }
     break;
 
   case "ENUM":
-    output = `ℹ️ ENUM hanya menerima nilai dari daftar tetap (contoh: 'A', 'B', 'C').`;
+    output = `ℹ️ ENUM hanya menerima nilai dari daftar tetap (contoh: 'A', 'B', 'C'). 
+    Jika nilai tidak cocok, MySQL akan menyimpan sebagai <code>''</code> (string kosong).`;
     break;
 
   case "SET":
-    output = `ℹ️ SET bisa berisi beberapa nilai dari daftar opsi (contoh: 'A,B').`;
+    output = `ℹ️ SET dapat berisi satu atau lebih nilai dari daftar opsi (misal: 'A,B'). 
+    MySQL akan mengabaikan nilai yang tidak terdaftar di definisi.`;
+    break;
+
+  case "BLOB":
+    output = `🗂️ BLOB digunakan untuk data biner seperti gambar, file, atau byte data. 
+    Tidak cocok untuk teks biasa. Ukuran maksimal tergantung tipe (TINYBLOB - LONGBLOB).`;
     break;
 
   // 🕓 DATE & TIME TYPES
   case "DATE":
     output = /^\d{4}-\d{2}-\d{2}$/.test(value)
-      ? "✅ Format tanggal valid (YYYY-MM-DD)."
-      : "❌ Format tanggal salah, gunakan YYYY-MM-DD.";
+      ? `✅ Format tanggal valid (YYYY-MM-DD).`
+      : `❌ Format tanggal salah. Gunakan format <code>YYYY-MM-DD</code>.`;
     break;
 
   case "DATETIME":
   case "TIMESTAMP":
     output = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
       ? `✅ Format valid untuk ${type} (YYYY-MM-DD HH:MM:SS).`
-      : `❌ Format salah, gunakan YYYY-MM-DD HH:MM:SS.`;
+      : `❌ Format salah. Gunakan format <code>YYYY-MM-DD HH:MM:SS</code>.`;
     break;
 
   case "TIME":
     output = /^\d{2}:\d{2}:\d{2}$/.test(value)
-      ? "✅ Format waktu valid (HH:MM:SS)."
-      : "❌ Format waktu salah.";
+      ? `✅ Format waktu valid (HH:MM:SS).`
+      : `❌ Format waktu salah.`;
     break;
 
   case "YEAR":
-    output = /^\d{4}$/.test(value)
-      ? `✅ Tahun valid (${value}).`
-      : "❌ Tahun harus 4 digit (contoh: 2025).";
+    if (/^\d{4}$/.test(value)) {
+      output = `✅ Tahun valid (${value}).`;
+    } else if (/^\d{2}$/.test(value)) {
+      output = `⚠️ Tahun dua digit akan otomatis dikonversi (misal '25' → '2025').`;
+    } else {
+      output = "❌ Tahun harus 2 atau 4 digit (contoh: 2025).";
+    }
     break;
 
   // 🧠 BOOLEAN & BIT
   case "BOOLEAN":
-    output = ["true", "false", "0", "1"].includes(value.toLowerCase())
-      ? "✅ Nilai valid untuk BOOLEAN."
-      : "❌ BOOLEAN hanya menerima 0, 1, TRUE, atau FALSE.";
+    if (["true", "false", "0", "1"].includes(value.toLowerCase())) {
+      const val = value.toLowerCase() === "true" || value === "1" ? 1 : 0;
+      output = `✅ Nilai valid (${value.toUpperCase()}) dan akan disimpan sebagai <code>${val}</code>.`;
+    } else {
+      output = "❌ BOOLEAN hanya menerima 0, 1, TRUE, atau FALSE.";
+    }
     break;
 
   case "BIT":
-    output = /^[01]+$/.test(value)
-      ? `✅ Nilai biner valid (${value}).`
-      : "❌ BIT hanya boleh berisi angka 0 dan 1.";
+    if (/^[01]+$/.test(value)) {
+      output = `✅ Nilai biner valid (${value}). Panjang bit: ${len}.`;
+    } else {
+      output = "❌ BIT hanya boleh berisi karakter 0 dan 1.";
+    }
     break;
 
   // DEFAULT
   default:
-    output = "ℹ️ Nilai diterima, tapi validasi spesifik belum ditentukan.";
+    output = "ℹ️ Nilai diterima, tapi validasi spesifik belum ditentukan untuk tipe ini.";
 }
 
 // hasil output
@@ -339,4 +380,3 @@ resultBox.className = "mt-4 text-center text-cyan-300 font-semibold text-lg";
 
 </body>
 </html>
-
