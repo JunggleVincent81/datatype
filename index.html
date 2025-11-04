@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataType Explorer MySQL | Tegar Bagus Santoso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: radial-gradient(circle at top right, #0ea5e9, #6366f1, #111827);
+      min-height: 100vh;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+  </style>
+</head>
+<body class="text-white font-inter">
+
+  <!-- Header -->
+  <header class="flex flex-col items-center justify-center py-16 text-center">
+    <h1 class="text-5xl font-bold mb-3">🧠 DataType Explorer - MySQL</h1>
+    <p class="text-gray-300 max-w-xl">
+      Jelajahi tipe data MySQL secara visual dan interaktif. Lihat fungsi, batas nilai, dan hasil validasinya.
+    </p>
+  </header>
+
+  <!-- Main -->
+  <main class="max-w-5xl mx-auto px-6 space-y-16 pb-24">
+
+    <!-- Section 1: Pengantar -->
+    <section class="glass rounded-2xl p-8 shadow-xl">
+      <h2 class="text-2xl font-semibold mb-4">📘 Apa itu Tipe Data di MySQL?</h2>
+      <p class="text-gray-200 leading-relaxed">
+        Dalam MySQL, <span class="text-cyan-300 font-medium">tipe data</span> menentukan jenis dan ukuran nilai yang dapat disimpan di kolom tabel.
+        Misalnya, angka menggunakan <code>INT</code>, teks menggunakan <code>VARCHAR</code>, dan tanggal menggunakan <code>DATE</code>.
+      </p>
+      <p class="mt-3 text-gray-400">
+        Pemilihan tipe data yang tepat penting untuk efisiensi penyimpanan dan kecepatan query.
+      </p>
+    </section>
+
+    <!-- Section 2: Kategori -->
+    <section class="glass rounded-2xl p-8 shadow-xl">
+      <h2 class="text-2xl font-semibold mb-6">⚙️ Pilih Kategori Tipe Data</h2>
+
+      <div class="flex flex-wrap gap-4 justify-center">
+        <button class="category-btn bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-xl font-semibold transition-all" data-category="numeric">Numeric</button>
+        <button class="category-btn bg-green-500 hover:bg-green-600 px-6 py-3 rounded-xl font-semibold transition-all" data-category="string">String / Text</button>
+        <button class="category-btn bg-indigo-500 hover:bg-indigo-600 px-6 py-3 rounded-xl font-semibold transition-all" data-category="date">Date & Time</button>
+      </div>
+
+      <div id="dataTable" class="mt-8 overflow-x-auto transition-all duration-500"></div>
+    </section>
+
+    <!-- Section 3: Playground -->
+    <section class="glass rounded-2xl p-8 shadow-xl">
+      <h2 class="text-2xl font-semibold mb-6">🧩 Coba Sendiri!</h2>
+
+      <div class="flex flex-col md:flex-row gap-4">
+        <select id="typeSelect" class="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-black focus:ring-2 focus:ring-cyan-400">
+          <option value="">Pilih tipe data...</option>
+          <option value="TINYINT">TINYINT</option>
+          <option value="SMALLINT">SMALLINT</option>
+          <option value="INT">INT</option>
+          <option value="BIGINT">BIGINT</option>
+          <option value="DECIMAL">DECIMAL</option>
+          <option value="VARCHAR">VARCHAR</option>
+          <option value="DATE">DATE</option>
+        </select>
+
+        <input id="valueInput" type="text" placeholder="Masukkan nilai..."
+          class="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-black focus:ring-2 focus:ring-cyan-400">
+
+        <button id="checkBtn" class="bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-xl font-semibold transition-all">Periksa</button>
+      </div>
+
+      <div id="playgroundResult" class="mt-6 text-center text-lg font-medium text-gray-200">
+        💡 Pilih tipe data dan masukkan nilai untuk melihat hasil validasi.
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-6 text-gray-400 text-sm">
+    Dibuat oleh <span class="text-cyan-300 font-medium">Tegar Bagus Santoso</span> © 2025
+  </footer>
+
+  <!-- Script -->
+  <script>
+    const dataTypes = {
+      numeric: [
+        { type: "TINYINT", example: "127", desc: "Bilangan bulat kecil (-128 s.d 127)" },
+        { type: "SMALLINT", example: "32000", desc: "Bilangan bulat kecil hingga menengah" },
+        { type: "INT / INTEGER", example: "2147483647", desc: "Bilangan bulat umum (4 byte)" },
+        { type: "BIGINT", example: "9223372036854775807", desc: "Bilangan bulat besar (8 byte)" },
+        { type: "DECIMAL(m,d)", example: "12.34", desc: "Angka presisi tetap, cocok untuk uang" },
+        { type: "FLOAT / DOUBLE", example: "3.14159", desc: "Angka desimal presisi mengambang" },
+        { type: "BIT", example: "b'101'", desc: "Nilai biner (bit)" }
+      ],
+      string: [
+        { type: "CHAR(n)", example: "‘A’", desc: "Teks tetap sepanjang n karakter" },
+        { type: "VARCHAR(n)", example: "‘Tegar’", desc: "Teks variabel hingga n karakter" },
+        { type: "TEXT", example: "‘Deskripsi panjang...’", desc: "Teks panjang hingga 65.535 karakter" },
+        { type: "BLOB", example: "(binary data)", desc: "Data biner seperti gambar atau file" },
+        { type: "ENUM('A','B')", example: "‘A’", desc: "Pilih satu nilai dari daftar opsi" }
+      ],
+      date: [
+        { type: "DATE", example: "‘2025-11-04’", desc: "Tanggal (YYYY-MM-DD)" },
+        { type: "DATETIME", example: "‘2025-11-04 22:30:00’", desc: "Tanggal dan waktu lengkap" },
+        { type: "TIME", example: "‘22:30:00’", desc: "Waktu (jam, menit, detik)" },
+        { type: "YEAR", example: "‘2025’", desc: "Tahun 4 digit" }
+      ]
+    };
+
+    const ranges = {
+      TINYINT: [-128, 127],
+      SMALLINT: [-32768, 32767],
+      INT: [-2147483648, 2147483647],
+      BIGINT: [-9223372036854775808, 9223372036854775807],
+      DECIMAL: "Presisi tergantung pada (m,d)",
+      VARCHAR: "Maksimal 65535 karakter",
+      DATE: "Format: YYYY-MM-DD"
+    };
+
+    const tableContainer = document.getElementById('dataTable');
+    const buttons = document.querySelectorAll('.category-btn');
+    const result = document.getElementById('playgroundResult');
+
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const category = btn.dataset.category;
+        renderTable(category);
+
+        buttons.forEach(b => b.classList.remove('ring-2', 'ring-white'));
+        btn.classList.add('ring-2', 'ring-white');
+      });
+    });
+
+    function renderTable(category) {
+      const types = dataTypes[category];
+      if (!types) return;
+      
+      let html = `
+      <table class="w-full border-separate border-spacing-y-2">
+        <thead class="text-cyan-300">
+          <tr>
+            <th class="px-3 py-2">Tipe Data</th>
+            <th class="px-3 py-2">Contoh Nilai</th>
+            <th class="px-3 py-2">Deskripsi</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-200">
+          ${types.map(t => `
+            <tr class="bg-white/5 hover:bg-white/10 transition-all">
+              <td class="px-3 py-2 font-semibold">${t.type}</td>
+              <td class="px-3 py-2">${t.example}</td>
+              <td class="px-3 py-2">${t.desc}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+      
+      tableContainer.innerHTML = html;
+    }
+
+    document.getElementById('checkBtn').addEventListener('click', () => {
+      const type = document.getElementById('typeSelect').value;
+      const value = document.getElementById('valueInput').value.trim();
+
+      if (!type || !value) {
+        result.innerHTML = "⚠️ Pilih tipe data dan masukkan nilai terlebih dahulu.";
+        result.className = "mt-6 text-yellow-300 font-medium text-center";
+        return;
+      }
+
+      let output = "";
+      const num = Number(value);
+
+      switch (type) {
+        case "TINYINT":
+        case "SMALLINT":
+        case "INT":
+        case "BIGINT":
+          const [min, max] = ranges[type];
+          if (isNaN(num)) {
+            output = `❌ Nilai <code>${value}</code> bukan angka valid.`;
+          } else if (num < min || num > max) {
+            output = `❌ Melebihi batas ${type}: ${min} hingga ${max}.`;
+          } else {
+            output = `✅ Nilai <code>${value}</code> valid untuk ${type} (${min} s.d ${max}).`;
+          }
+          break;
+        case "DECIMAL":
+          output = `ℹ️ ${ranges.DECIMAL}`;
+          break;
+        case "VARCHAR":
+          output = value.length <= 65535
+            ? `✅ Panjang teks ${value.length} karakter (valid untuk VARCHAR).`
+            : `❌ Terlalu panjang untuk VARCHAR (maks 65535 karakter).`;
+          break;
+        case "DATE":
+          output = /^\d{4}-\d{2}-\d{2}$/.test(value)
+            ? `✅ Format tanggal valid (YYYY-MM-DD).`
+            : `❌ Format tanggal salah, gunakan YYYY-MM-DD.`;
+          break;
+        default:
+          output = "❌ Tipe data belum dikenali.";
+      }
+
+      result.innerHTML = output;
+      result.className = "mt-6 text-lg font-semibold text-center text-cyan-300";
+    });
+  </script>
+
+</body>
+</html>
